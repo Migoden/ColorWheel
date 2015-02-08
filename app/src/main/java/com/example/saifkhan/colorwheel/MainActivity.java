@@ -54,8 +54,14 @@ public class MainActivity extends Activity {
                             while (true) {
                                 parseCommand(dataInputStream);
                             }
-                        } catch (IOException e) {
+                        } catch (final IOException e) {
                             e.printStackTrace();
+                            MainActivity.this.runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    Toast.makeText(MainActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show();
+                                }
+                            });
                         }
                     }
 
@@ -64,7 +70,7 @@ public class MainActivity extends Activity {
                         MainActivity.this.runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
-                                Toast.makeText(MainActivity.this, message, Toast.LENGTH_LONG).show();
+                                Toast.makeText(MainActivity.this, message, Toast.LENGTH_SHORT).show();
                             }
                         });
                     }
@@ -79,7 +85,7 @@ public class MainActivity extends Activity {
         mCommandListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                updateForCommand((Command) mCommandListAdapter.getItem(i));
+                updateForCommand((Command) mCommandListAdapter.getItem(i), false);
             }
         });
     }
@@ -102,10 +108,10 @@ public class MainActivity extends Activity {
         }
         Command command = new Command(commandType, r, g, b);
         mCommands.add(command);
-        updateForCommand(command);
+        updateForCommand(command, true);
     }
 
-    private void updateForCommand(Command command) {
+    private void updateForCommand(Command command, boolean newCommand) {
         if(command.command_type == CommandType.ABSOLUTE) {
             clearActiveCommands();
             deselectAbsoluteCommand();
@@ -113,7 +119,9 @@ public class MainActivity extends Activity {
             command.setSelected(1);
         } else {
             command.setSelected(command.getSelectedCount() + 1);
-            mActiveRelativeCommands.add(command);
+            if(newCommand || command.getSelectedCount() == 1) {
+                mActiveRelativeCommands.add(command);
+            }
         }
         resetUI();
     }
@@ -141,9 +149,9 @@ public class MainActivity extends Activity {
                 int g = mAbsoluteCommand.G;
                 int b = mAbsoluteCommand.B;
                 for (Command command : mActiveRelativeCommands) {
-                    r += command.R;
-                    g += command.G;
-                    b += command.B;
+                    r += command.R * command.getSelectedCount();
+                    g += command.G * command.getSelectedCount();
+                    b += command.B * command.getSelectedCount();
                 }
                 mContainerView.setBackgroundColor(Color.rgb(r, g, b));
                 mHexTextView.setText("Current color : R: " + r + " G: " + g + " B: " + b);
