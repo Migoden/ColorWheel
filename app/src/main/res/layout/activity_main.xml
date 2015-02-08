@@ -7,9 +7,10 @@
 
     <Button
         android:id="@+id/connect_btn"
+        android:text="@string/connect_btn"
+        android:background="@android:color/transparent"
         android:layout_alignParentRight="true"
         android:layout_alignParentTop="true"
-        android:text="@string/connect_btn"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" />
 
