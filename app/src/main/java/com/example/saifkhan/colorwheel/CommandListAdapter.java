@@ -1,10 +1,12 @@
 package com.example.saifkhan.colorwheel;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import java.util.ArrayList;
@@ -17,12 +19,10 @@ public class CommandListAdapter extends BaseAdapter {
 
     private ArrayList<MainActivity.Command> mCommands;
     private final LayoutInflater mLayoutInflater;
-    private final Context mContext;
 
     public CommandListAdapter(LayoutInflater inflater, Context context) {
         mCommands = new ArrayList<MainActivity.Command>();
         mLayoutInflater = inflater;
-        mContext = context;
     }
 
     public void setCommands(ArrayList<MainActivity.Command> commands){
@@ -55,9 +55,21 @@ public class CommandListAdapter extends BaseAdapter {
         MainActivity.Command command = (MainActivity.Command) getItem(i);
         TextView typeTextView = (TextView) view.findViewById(R.id.command_type_text_view);
         TextView rgbTextView = (TextView) view.findViewById(R.id.rgb_text_view);
+        TextView isSelectedTextView= (TextView) view.findViewById(R.id.is_selected_indicator);
 
         typeTextView.setText(command.command_type.getCommandCopy());
         rgbTextView.setText("R: " + command.R + " G: " + command.G + " B: " + command.B);
+        if(command.getSelectedCount() > 0) {
+            isSelectedTextView.setVisibility(View.VISIBLE);
+            isSelectedTextView.setText((command.command_type == MainActivity.CommandType.ABSOLUTE) ? "Selected" : "Selected x " + command.getSelectedCount());
+        } else {
+            isSelectedTextView.setVisibility(View.GONE);
+        }
+        if(command.command_type == MainActivity.CommandType.ABSOLUTE) {
+            view.setBackgroundColor(Color.rgb(command.R, command.G, command.B));
+        } else {
+            view.setBackgroundColor(Color.TRANSPARENT);
+        }
         return view;
     }
 }

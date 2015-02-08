@@ -27,23 +27,19 @@ public class MainActivity extends Activity {
     private ListView mCommandListView;
 
     public enum CommandType{
-        RELATIVE(1, "Relative"),ABSOLUTE(2, "Absolute");
-        private final int mCode;
+        RELATIVE("Relative"),ABSOLUTE("Absolute");
         private final String mCommandCopy;
 
-        CommandType(int code, String commandCopy) {
-            mCode = code;
+        CommandType(String commandCopy) {
             mCommandCopy = commandCopy;
         }
 
-        public int getCode() {
-            return mCode;
-        }
 
         public String getCommandCopy() {
             return mCommandCopy;
         }
     }
+
     public class Command {
 
         public Command(CommandType type, int r, int g, int b) {
@@ -53,10 +49,19 @@ public class MainActivity extends Activity {
             B = b;
         }
 
+        private int mSelectedCount;
         CommandType command_type;
         int R;
         int G;
         int B;
+
+        public int getSelectedCount() {
+            return mSelectedCount;
+        }
+
+        public void setSelected(int isSelected) {
+            this.mSelectedCount = isSelected;
+        }
     }
 
     private ArrayList<Command> mCommands = new ArrayList<Command>();
@@ -138,12 +143,30 @@ public class MainActivity extends Activity {
 
     private void updateForCommand(Command command) {
         if(command.command_type == CommandType.ABSOLUTE) {
+            clearActiveCommands();
+            deselectAbsoluteCommand();
             mAbsoluteCommand = command;
-            mActiveRelativeCommands.clear();
+            command.setSelected(1);
         } else {
+            command.setSelected(command.getSelectedCount() + 1);
             mActiveRelativeCommands.add(command);
         }
         resetUI();
+    }
+
+    private void deselectAbsoluteCommand() {
+        if(mAbsoluteCommand != null) {
+            mAbsoluteCommand.setSelected(0);
+        }
+    }
+
+    private void clearActiveCommands() {
+        if(mActiveRelativeCommands != null) {
+            for(Command command : mActiveRelativeCommands) {
+                command.setSelected(0);
+            }
+            mActiveRelativeCommands.clear();
+        }
     }
 
     private void resetUI() {

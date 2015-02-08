@@ -4,5 +4,6 @@
     <string name="app_name">ColorWheel</string>
     <string name="ip_address">IP Address</string>
     <string name="connect_btn">Connect</string>
+    <string name="is_selected">Is Selected</string>
 
 </resources>
