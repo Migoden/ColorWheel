@@ -50,18 +50,18 @@ public class CommandListAdapter extends BaseAdapter {
         TextView rgbTextView = (TextView) view.findViewById(R.id.rgb_text_view);
         TextView isSelectedTextView= (TextView) view.findViewById(R.id.is_selected_indicator);
 
-        typeTextView.setText(command.command_type.getCommandCopy());
+        typeTextView.setText(command.getCommandType().getCommandCopy());
         rgbTextView.setText("R: " + command.R + " G: " + command.G + " B: " + command.B);
         if(command.getSelectedCount() > 0) {
             isSelectedTextView.setVisibility(View.VISIBLE);
-            isSelectedTextView.setText((command.command_type == CommandType.ABSOLUTE) ? "Selected" : "Selected x " + command.getSelectedCount());
+            isSelectedTextView.setText((command.getCommandType() == CommandType.ABSOLUTE) ? "Selected" : "Selected x " + command.getSelectedCount());
         } else {
             isSelectedTextView.setVisibility(View.GONE);
         }
-        if(command.command_type == CommandType.ABSOLUTE) {
+        if(command.getCommandType() == CommandType.ABSOLUTE) {
             view.setBackgroundColor(Color.rgb(command.R, command.G, command.B));
         } else {
-            view.setBackgroundColor(Color.TRANSPARENT);
+            view.setBackgroundColor(Color.argb(100, 0, 0, 0));
         }
         return view;
     }

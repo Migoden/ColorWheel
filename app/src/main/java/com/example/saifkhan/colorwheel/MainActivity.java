@@ -3,7 +3,6 @@ package com.example.saifkhan.colorwheel;
 import android.app.Activity;
 import android.graphics.Color;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Button;
@@ -18,18 +17,18 @@ import java.util.ArrayList;
 
 import com.example.saifkhan.colorwheel.Command.*;
 
-
 public class MainActivity extends Activity {
 
     private View mContainerView;
     private TextView mHexTextView;
     private CommandListAdapter mCommandListAdapter;
-    private ListView mCommandListView;
 
     private ArrayList<Command> mCommands = new ArrayList<Command>();
-    private Command mAbsoluteCommand = new Command(CommandType.ABSOLUTE, 127, 127, 127);
+    private Command mAbsoluteCommand;
+    private ColorMetaData currentColor = new ColorMetaData(127,127,127);
     private ArrayList<Command> mActiveRelativeCommands = new ArrayList<Command>();
     private NetworkUtil.SocketConnectTask mSocketTask;
+    private EditText mIPEditTextView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,13 +37,15 @@ public class MainActivity extends Activity {
         Button connectButton = (Button) findViewById(R.id.connect_btn);
         mContainerView = connectButton.getRootView();
         mHexTextView = (TextView) findViewById(R.id.current_hex_edit_text);
-        final EditText ipEditText = (EditText) findViewById(R.id.ip_edit_text);
+        mIPEditTextView = (EditText) findViewById(R.id.ip_edit_text);
+
         connectButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 if(mSocketTask != null) {
                     mSocketTask.closeSteam();
                     mSocketTask.cancel(true);
+                    resetCommands();
                 }
                 mSocketTask = new NetworkUtil.SocketConnectTask(new NetworkUtil.NetworkRequestListener(){
 
@@ -75,19 +76,26 @@ public class MainActivity extends Activity {
                         });
                     }
                 });
-                mSocketTask.execute(ipEditText.getText().toString());
+                mSocketTask.execute(mIPEditTextView.getText().toString());
             }
         });
 
         mCommandListAdapter = new CommandListAdapter(getLayoutInflater(), this);
-        mCommandListView = (ListView) findViewById(R.id.recent_commands_list_view);
+        ListView mCommandListView = (ListView) findViewById(R.id.recent_commands_list_view);
         mCommandListView.setAdapter(mCommandListAdapter);
         mCommandListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                updateForCommand((Command) mCommandListAdapter.getItem(i), false);
+                updateDataForCommand((Command) mCommandListAdapter.getItem(i));
+                updateUIForCommand((Command) mCommandListAdapter.getItem(i));
             }
         });
+    }
+
+    private void resetCommands() {
+        mActiveRelativeCommands.clear();
+        mCommands.clear();
+        updateUIForCommand(new Command(CommandType.ABSOLUTE, 127, 127, 127));
     }
 
     private void parseCommand(DataInputStream dataInputStream) throws IOException {
@@ -108,22 +116,8 @@ public class MainActivity extends Activity {
         }
         Command command = new Command(commandType, r, g, b);
         mCommands.add(command);
-        updateForCommand(command, true);
-    }
-
-    private void updateForCommand(Command command, boolean newCommand) {
-        if(command.command_type == CommandType.ABSOLUTE) {
-            clearActiveCommands();
-            deselectAbsoluteCommand();
-            mAbsoluteCommand = command;
-            command.setSelected(1);
-        } else {
-            command.setSelected(command.getSelectedCount() + 1);
-            if(newCommand || command.getSelectedCount() == 1) {
-                mActiveRelativeCommands.add(command);
-            }
-        }
-        resetUI();
+        updateDataForCommand(command);
+        updateUIForCommand(command);
     }
 
     private void deselectAbsoluteCommand() {
@@ -141,23 +135,49 @@ public class MainActivity extends Activity {
         }
     }
 
-    private void resetUI() {
+    private void updateDataForCommand(Command command) {
+        if(command.getCommandType() == CommandType.ABSOLUTE) {
+            clearActiveCommands();
+            deselectAbsoluteCommand();
+            mAbsoluteCommand = command;
+            command.setSelected(1);
+        } else {
+            command.setSelected(command.getSelectedCount() + 1);
+            if(command.getSelectedCount() == 1) {
+                mActiveRelativeCommands.add(command);
+            }
+        }
+    }
+
+    private void updateUIForCommand(final Command command) {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                int r = mAbsoluteCommand.R;
-                int g = mAbsoluteCommand.G;
-                int b = mAbsoluteCommand.B;
-                for (Command command : mActiveRelativeCommands) {
-                    r += command.R * command.getSelectedCount();
-                    g += command.G * command.getSelectedCount();
-                    b += command.B * command.getSelectedCount();
+                if(command.getCommandType() == CommandType.ABSOLUTE) {
+                    currentColor = new ColorMetaData(command.R, command.G, command.B);
+                } else {
+                    currentColor.red += command.R;
+                    currentColor.green += command.G;
+                    currentColor.blue += command.B;
                 }
-                mContainerView.setBackgroundColor(Color.rgb(r, g, b));
-                mHexTextView.setText("Current color : R: " + r + " G: " + g + " B: " + b);
+
+                mContainerView.setBackgroundColor(Color.rgb(currentColor.red, currentColor.green, currentColor.blue));
+                mHexTextView.setText("Current color : R: " + currentColor.red + " G: " + currentColor.green + " B: " + currentColor.blue);
                 mCommandListAdapter.setCommands((ArrayList<Command>) mCommands.clone());
                 mCommandListAdapter.notifyDataSetChanged();
             }
         });
+    }
+
+    class ColorMetaData {
+        int red;
+        int green;
+        int blue;
+
+        public ColorMetaData(int r, int g, int b) {
+            red = r;
+            green = g;
+            blue = b;
+        }
     }
 }

@@ -6,6 +6,17 @@ package com.example.saifkhan.colorwheel;
 
 public class Command {
 
+    public Command(CommandType type, int r, int g, int b) {
+        commandType = type;
+        R = r;
+        G = g;
+        B = b;
+    }
+
+    public CommandType getCommandType() {
+        return commandType;
+    }
+
     public enum CommandType{
         RELATIVE("Relative"),ABSOLUTE("Absolute");
         private final String mCommandCopy;
@@ -19,15 +30,8 @@ public class Command {
         }
     }
 
-    public Command(CommandType type, int r, int g, int b) {
-        command_type = type;
-        R = r;
-        G = g;
-        B = b;
-    }
-
     private int mSelectedCount;
-    CommandType command_type;
+    private CommandType commandType;
     int R;
     int G;
     int B;
