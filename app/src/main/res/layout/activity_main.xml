@@ -23,5 +23,20 @@
         android:layout_alignParentLeft="true"
         android:layout_toRightOf="@id/connect_btn" />
 
+    <TextView
+        android:id="@+id/current_hex_edit_text"
+        android:layout_below="@id/connect_btn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="20sp"
+        android:layout_centerHorizontal="true"/>
+
+    <ListView
+        android:id="@+id/recent_commands_list_view"
+        android:layout_below="@id/current_hex_edit_text"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
 
 </RelativeLayout>

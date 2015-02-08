@@ -5,8 +5,11 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.BufferedReader;
@@ -19,20 +22,29 @@ import java.util.ArrayList;
 public class MainActivity extends Activity {
 
     private View mContainerView;
+    private TextView mHexTextView;
+    private CommandListAdapter mCommandListAdapter;
+    private ListView mCommandListView;
 
-    private enum CommandType{
-        RELATIVE(1),ABSOLUTE(2);
+    public enum CommandType{
+        RELATIVE(1, "Relative"),ABSOLUTE(2, "Absolute");
         private final int mCode;
+        private final String mCommandCopy;
 
-        CommandType(int code) {
+        CommandType(int code, String commandCopy) {
             mCode = code;
+            mCommandCopy = commandCopy;
         }
 
         public int getCode() {
             return mCode;
         }
+
+        public String getCommandCopy() {
+            return mCommandCopy;
+        }
     }
-    private class Command {
+    public class Command {
 
         public Command(CommandType type, int r, int g, int b) {
             command_type = type;
@@ -57,6 +69,7 @@ public class MainActivity extends Activity {
         setContentView(R.layout.activity_main);
         Button connectButton = (Button) findViewById(R.id.connect_btn);
         mContainerView = connectButton.getRootView();
+        mHexTextView = (TextView) findViewById(R.id.current_hex_edit_text);
         final EditText ipEditText = (EditText) findViewById(R.id.ip_edit_text);
         connectButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -89,6 +102,16 @@ public class MainActivity extends Activity {
                 task.execute(ipEditText.getText().toString());
             }
         });
+
+        mCommandListAdapter = new CommandListAdapter(getLayoutInflater(), this);
+        mCommandListView = (ListView) findViewById(R.id.recent_commands_list_view);
+        mCommandListView.setAdapter(mCommandListAdapter);
+        mCommandListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                updateForCommand((Command) mCommandListAdapter.getItem(i));
+            }
+        });
     }
 
     private void parseCommand(DataInputStream dataInputStream) throws IOException {
@@ -109,7 +132,6 @@ public class MainActivity extends Activity {
             b = dataInputStream.readUnsignedByte();
         }
         Command command = new Command(commandType, r, g, b);
-        Log.v("saif", "saif command be " + commandType + " with red value " + r + " " + g + " " + b);
         mCommands.add(command);
         updateForCommand(command);
     }
@@ -131,12 +153,15 @@ public class MainActivity extends Activity {
                 int r = mAbsoluteCommand.R;
                 int g = mAbsoluteCommand.G;
                 int b = mAbsoluteCommand.B;
-                for(Command command : mActiveRelativeCommands) {
+                for (Command command : mActiveRelativeCommands) {
                     r += command.R;
                     g += command.G;
                     b += command.B;
                 }
                 mContainerView.setBackgroundColor(Color.rgb(r, g, b));
+                mHexTextView.setText("Current color : R: " + r + " G: " + g + " B: " + b);
+                mCommandListAdapter.setCommands((ArrayList<Command>) mCommands.clone());
+                mCommandListAdapter.notifyDataSetChanged();
             }
         });
     }
