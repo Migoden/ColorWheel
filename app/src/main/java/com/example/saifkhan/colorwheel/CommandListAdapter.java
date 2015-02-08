@@ -6,7 +6,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
-import android.widget.ImageView;
+import com.example.saifkhan.colorwheel.Command.*;
 import android.widget.TextView;
 
 import java.util.ArrayList;
@@ -17,21 +17,14 @@ import java.util.ArrayList;
  */
 public class CommandListAdapter extends BaseAdapter {
 
-    private ArrayList<MainActivity.Command> mCommands;
+    private ArrayList<Command> mCommands;
     private final LayoutInflater mLayoutInflater;
 
     public CommandListAdapter(LayoutInflater inflater, Context context) {
-        mCommands = new ArrayList<MainActivity.Command>();
+        mCommands = new ArrayList<Command>();
         mLayoutInflater = inflater;
     }
 
-    public void setCommands(ArrayList<MainActivity.Command> commands){
-        mCommands = commands;
-    }
-
-    public ArrayList<MainActivity.Command> getCommands(){
-        return mCommands;
-    }
     @Override
     public int getCount() {
         return mCommands.size();
@@ -52,7 +45,7 @@ public class CommandListAdapter extends BaseAdapter {
         if(view == null) {
             view = mLayoutInflater.inflate(R.layout.command_cell, viewGroup, false);
         }
-        MainActivity.Command command = (MainActivity.Command) getItem(i);
+        Command command = (Command) getItem(i);
         TextView typeTextView = (TextView) view.findViewById(R.id.command_type_text_view);
         TextView rgbTextView = (TextView) view.findViewById(R.id.rgb_text_view);
         TextView isSelectedTextView= (TextView) view.findViewById(R.id.is_selected_indicator);
@@ -61,15 +54,19 @@ public class CommandListAdapter extends BaseAdapter {
         rgbTextView.setText("R: " + command.R + " G: " + command.G + " B: " + command.B);
         if(command.getSelectedCount() > 0) {
             isSelectedTextView.setVisibility(View.VISIBLE);
-            isSelectedTextView.setText((command.command_type == MainActivity.CommandType.ABSOLUTE) ? "Selected" : "Selected x " + command.getSelectedCount());
+            isSelectedTextView.setText((command.command_type == CommandType.ABSOLUTE) ? "Selected" : "Selected x " + command.getSelectedCount());
         } else {
             isSelectedTextView.setVisibility(View.GONE);
         }
-        if(command.command_type == MainActivity.CommandType.ABSOLUTE) {
+        if(command.command_type == CommandType.ABSOLUTE) {
             view.setBackgroundColor(Color.rgb(command.R, command.G, command.B));
         } else {
             view.setBackgroundColor(Color.TRANSPARENT);
         }
         return view;
+    }
+
+    public void setCommands(ArrayList<Command> commands){
+        mCommands = commands;
     }
 }

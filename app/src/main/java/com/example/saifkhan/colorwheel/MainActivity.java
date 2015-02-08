@@ -12,11 +12,11 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.io.BufferedReader;
 import java.io.DataInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
+
+import com.example.saifkhan.colorwheel.Command.*;
 
 
 public class MainActivity extends Activity {
@@ -26,47 +26,10 @@ public class MainActivity extends Activity {
     private CommandListAdapter mCommandListAdapter;
     private ListView mCommandListView;
 
-    public enum CommandType{
-        RELATIVE("Relative"),ABSOLUTE("Absolute");
-        private final String mCommandCopy;
-
-        CommandType(String commandCopy) {
-            mCommandCopy = commandCopy;
-        }
-
-
-        public String getCommandCopy() {
-            return mCommandCopy;
-        }
-    }
-
-    public class Command {
-
-        public Command(CommandType type, int r, int g, int b) {
-            command_type = type;
-            R = r;
-            G = g;
-            B = b;
-        }
-
-        private int mSelectedCount;
-        CommandType command_type;
-        int R;
-        int G;
-        int B;
-
-        public int getSelectedCount() {
-            return mSelectedCount;
-        }
-
-        public void setSelected(int isSelected) {
-            this.mSelectedCount = isSelected;
-        }
-    }
-
     private ArrayList<Command> mCommands = new ArrayList<Command>();
     private Command mAbsoluteCommand = new Command(CommandType.ABSOLUTE, 127, 127, 127);
     private ArrayList<Command> mActiveRelativeCommands = new ArrayList<Command>();
+    private NetworkUtil.SocketConnectTask mSocketTask;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -79,14 +42,16 @@ public class MainActivity extends Activity {
         connectButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                NetworkUtil.SocketConnectTask task = new NetworkUtil.SocketConnectTask(new NetworkUtil.NetworkRequestListener(){
+                if(mSocketTask != null) {
+                    mSocketTask.closeSteam();
+                    mSocketTask.cancel(true);
+                }
+                mSocketTask = new NetworkUtil.SocketConnectTask(new NetworkUtil.NetworkRequestListener(){
 
                     @Override
-                    public void didReadBufferedReader(BufferedReader reader,  InputStream inputStream) {
-
+                    public void didReadBufferedReader(DataInputStream dataInputStream) {
                         try {
-                            DataInputStream dataInputStream = new DataInputStream(inputStream);
-                            while (dataInputStream != null) {
+                            while (true) {
                                 parseCommand(dataInputStream);
                             }
                         } catch (IOException e) {
@@ -104,7 +69,7 @@ public class MainActivity extends Activity {
                         });
                     }
                 });
-                task.execute(ipEditText.getText().toString());
+                mSocketTask.execute(ipEditText.getText().toString());
             }
         });
 
@@ -120,12 +85,11 @@ public class MainActivity extends Activity {
     }
 
     private void parseCommand(DataInputStream dataInputStream) throws IOException {
-        int r = 0;
-        int g = 0;
-        int b = 0;
         int commandTypeCode = dataInputStream.readByte();
+        int r;
+        int g;
+        int b;
         CommandType commandType = commandTypeCode == 1 ? CommandType.RELATIVE : CommandType.ABSOLUTE;
-
 
         if(commandType == CommandType.RELATIVE) {
             r = dataInputStream.readShort();
@@ -188,6 +152,4 @@ public class MainActivity extends Activity {
             }
         });
     }
-
-
 }
